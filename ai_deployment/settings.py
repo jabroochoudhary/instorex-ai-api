@@ -78,7 +78,7 @@ WSGI_APPLICATION = 'ai_deployment.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'pg_trgm',
+        'NAME': 'pg_term',
         'USER':'postgres',
         'PASSWORD':'11223344',
         'HOST':'127.0.0.1',
