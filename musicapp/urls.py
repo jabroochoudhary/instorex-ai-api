@@ -3,6 +3,6 @@ from . import views
 
 urlpatterns = [
     # path('get_recommendation',views.RecommendationAI.as_view(), name= "recommendation"),
-     path('get_recommendation', views.recommendation_new_user, name="recommendation"), 
-     path('ai_recommendation', views.recommendation_ai, name="recommendation"), 
+     path('get_recommendation', views.recommendation, name="recommendation"), 
+    #  path('ai_recommendation', views.recommendation_ai, name="recommendation"), 
 ]

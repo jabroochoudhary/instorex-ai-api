@@ -9,6 +9,10 @@ class MusicmindTrack(models.Model):
     track_file = models.FileField(upload_to=audio_directory_path)
     song_title = models.CharField(max_length=300)
     soundsource_id = models.CharField(max_length=10)
+    genre = models.CharField(max_length=100)
+    year = models.CharField(max_length=10)
+    composer = models.CharField(max_length=300)
+
     album = models.ForeignKey("musicmindalbum",related_name="mm_tracks", on_delete=models.SET_NULL, blank=True, null=True)
     artist = models.ForeignKey("musicmindartist", on_delete=models.CASCADE, null=True)
     def __str__(self):

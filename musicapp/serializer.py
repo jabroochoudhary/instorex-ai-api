@@ -74,7 +74,7 @@ class MusicmindTrackSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = MusicmindTrack
-        fields = ("id", "soundsource_id", "track_file", "song_title", "album", "artist")
+        fields = ("id", "soundsource_id", "track_file", "song_title", "album", "artist","genre","year","composer")
         read_only_fields = ["track_file", "song_title", "id"]
         
 class MusicmindTrackDetailsSerializer(serializers.ModelSerializer):
