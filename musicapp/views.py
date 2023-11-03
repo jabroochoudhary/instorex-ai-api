@@ -1,23 +1,17 @@
-# from django.shortcuts import render
+import os
 from django.http import JsonResponse
-# from django.views import View
 from django.views.decorators.csrf import csrf_exempt
-# from django.utils.decorators import method_decorator
 from .models import MusicmindTrack,MusicmindArtist,MusicmindTrackDetails,MusicmindAlbum
-# from django.conf import settings
-# import psycopg2
 import json
 from .serializer import MusicmindTrackSerializer, MusicmindTrackDetailsSerializer
 from django.core.serializers import serialize
 import random
 
 # these imports are used to get prediction from models
-import re  
-import nltk 
+import re
 from nltk.corpus import stopwords
 from sklearn.cluster import KMeans
 from sklearn.feature_extraction.text import TfidfVectorizer
-# import pandas as pd
 import joblib
 
 
@@ -46,10 +40,10 @@ def recommendation(request, *args, **kwargs):
             new_list = get_newly_added_songs_list(10)
             # print(len(new_list))
 
-            # model_list = get_model_prediction(artist, album, genre)
+            model_list = get_model_prediction(artist, album, genre)
 
 
-            combined_list = list(set(list(same_artist) + list(same_album) + list(new_list)))
+            combined_list = list(set(list(model_list) + list(new_list) + list(same_artist) + list(same_album)))
             result_list = list(combined_list)
             # print(len(result_list))
             data_response = get_datils_of_songs(result_list)
@@ -59,20 +53,6 @@ def recommendation(request, *args, **kwargs):
         data_response = {"msg": "In Valid request type.", "error": True,}
         return JsonResponse(data=data_response, safe=False)
         
-# @csrf_exempt
-# def recommendation_ai(request, *args, **kwargs):
-#     if request.method == 'POST':
-
-#         # same_artist = get_same_artist_songs_list(artist_id)
-#         # same_album = get_same_album_songs_list(album_id)
-#         new_list = get_newly_added_songs_list()
-
-#         data_response = get_datils_of_songs(new_list)
-#         return JsonResponse(data=data_response, safe=False)
-#     else:
-#         data_response = {"msg": "In Valid request type.", "error": True,}
-#         return JsonResponse(data=data_response, safe=False)
-
 def get_single_track_detail(id):
     tracks = MusicmindTrack.objects.get(id=id) #[:200]
     serializer = MusicmindTrackSerializer(tracks)
@@ -107,7 +87,7 @@ def get_same_album_songs_list(album_id ):
     return track_ids
 
 def preprocess_text(text):
-    nltk.download('stopwords')
+    # nltk.download('stopwords')
     stop_words = set(stopwords.words('english'))
     text = text.lower()
     text = re.sub(r'[^\w\s]', '', text)  # Remove special characters
@@ -116,15 +96,16 @@ def preprocess_text(text):
     return ' '.join(words)
 
 def get_model_prediction(artist, album, genre):
-
+    path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "model_files")
+    print(path)
     artist = preprocess_text(artist)
     album = preprocess_text(album)
     genre = preprocess_text(genre)
     tfidf_vectorizer = TfidfVectorizer()
-    tfidf_vectorizer = joblib.load('tfidf_vectorizer.pkl')
+    tfidf_vectorizer = joblib.load(os.path.join(path,'tfidf_vectorizer.pkl'))
     input_vector = tfidf_vectorizer.transform([album + ' ' + artist + ' ' + genre])
-    model_load = joblib.load('kmeans_model_musicmind.pkl')
+    model_load = joblib.load(os.path.join(path,'kmeans_model_musicmind.pkl'))
     cluster = model_load.predict(input_vector)
-    map_IDs =joblib.load('map_prediction.pkl')
-    track_ids = [key for key, value in map_IDs.items() if value == clstr[0]]
+    map_IDs =joblib.load(os.path.join(path,'map_prediction.pkl'))
+    track_ids = [key for key, value in map_IDs.items() if value == cluster[0]]
     return track_ids[:30]
