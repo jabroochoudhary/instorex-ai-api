@@ -1,25 +1,28 @@
 import os
 from django.http import JsonResponse
-from django.views.decorators.csrf import csrf_exempt
-from .models import MusicmindTrack,MusicmindArtist,MusicmindTrackDetails,MusicmindAlbum
-import json
-from .serializer import MusicmindTrackSerializer, MusicmindTrackDetailsSerializer
+# from django.views.decorators.csrf import csrf_exempt
+from .models import MusicmindTrack
+# import json
+from .serializer import MusicmindTrackSerializer
 from django.core.serializers import serialize
 import random
-
+from rest_framework.response import Response
+from rest_framework import status, generics
+from rest_framework.permissions import IsAuthenticated
 # these imports are used to get prediction from models
 import re
 from nltk.corpus import stopwords
-from sklearn.cluster import KMeans
+# from sklearn.cluster import KMeans
 from sklearn.feature_extraction.text import TfidfVectorizer
 import joblib
 
+class ModelPrediction(generics.ListAPIView):
+    permission_classes = [IsAuthenticated]
+    # serializer_class = track_serializer
+    def post(self, request, *args, **kwargs):
+        track_id = request.POST.get('track_id')
+        device_id = request.POST.get('device_id')
 
-
-@csrf_exempt
-def recommendation(request, *args, **kwargs):
-    if request.method == 'GET':
-        track_id = request.GET.get('track_id')
         if track_id is None:
             new_list = get_newly_added_songs_list(20)
             data_response = get_datils_of_songs(new_list)
@@ -49,10 +52,7 @@ def recommendation(request, *args, **kwargs):
             data_response = get_datils_of_songs(result_list)
 
         return JsonResponse(data=data_response, safe=False)
-    else:
-        data_response = {"msg": "In Valid request type.", "error": True,}
-        return JsonResponse(data=data_response, safe=False)
-        
+           
 def get_single_track_detail(id):
     tracks = MusicmindTrack.objects.get(id=id) #[:200]
     serializer = MusicmindTrackSerializer(tracks)
@@ -109,3 +109,4 @@ def get_model_prediction(artist, album, genre):
     map_IDs =joblib.load(os.path.join(path,'map_prediction.pkl'))
     track_ids = [key for key, value in map_IDs.items() if value == cluster[0]]
     return track_ids[:30]
+
